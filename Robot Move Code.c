@@ -49,6 +49,7 @@ void move_spot(int index_num)
 }
 
 
+
 task main()
 {
 	for(int i = 0; i < 9; i++)
