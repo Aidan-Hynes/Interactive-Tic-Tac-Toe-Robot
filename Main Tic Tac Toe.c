@@ -1,3 +1,4 @@
+//ALGORITHM FUNCTIONS
 bool check_for_win(int *board, int player)
 {
 	for(int i = 0; i <= 2; i++)
@@ -19,8 +20,6 @@ bool check_for_win(int *board, int player)
 
 	return false;
 }
-
-//test456
 
 bool is_terminal(int *board)
 {
@@ -86,6 +85,29 @@ int minimax(int *board, int depth, bool maxing)
 	return 0;
 }
 
+int best_robot_move(int *board)
+{
+	int best_move = -1;
+	int best_score = -100000;
+	for(int i = 0; i < 9; i++)
+	{
+		if(board[i] == 0)
+		{
+			board[i] = 1;
+			int score = minimax(board, 0, false);
+			board[i] = 0;
+			if(score > best_score)
+			{
+				best_score = score;
+				best_move = i;
+			}
+		}
+	}
+	writeDebugStreamLine("Selected Move: %d", best_move);
+	return best_move;
+}
+
+//ROBOT MOVE FUNCTIONS
 void track_reset()
 {
 	bool x_reset = true;
@@ -96,11 +118,9 @@ void track_reset()
 	motor[motorC] = 15;
 	time1[T1] = 0;
 	wait1Msec(200);
+
 	while(x_reset || y_reset)
 	{
-		writeDebugStreamLine("%f", abs(nMotorEncoder(motorA)/(time1[T1]/100)));
-		writeDebugStreamLine("%f", abs(nMotorEncoder(motorC)/(time1[T1]/100)));
-
 		if(abs(nMotorEncoder(motorA)/(time1(T1)/100)) < 10)
 		{
 			x_reset = false;
@@ -129,47 +149,92 @@ void move_motor(tMotor motor_port, int distance, int speed)
 	motor[motor_port] = 0;
 }
 
-void move_spot(int index_num)
-{
-	const int move_array[9][2] = {{0,480},{195,480},{390,480},{0,240},{195,240},{390,240},{0,0},{195,0},{390,0}};
-	move_motor(motorC, move_array[index_num][0], -20);
-	move_motor(motorA, move_array[index_num][1], 30);
+
+void movePenSense(int spot, bool isPen)
+	{
+		//Configurable distances for rows/columns, we are using 390/390 encoder square
+		const int PLAYING_LENGTH = 390;
+		int dist_between_centers = 0;
+		int dist_to_center = 0;
+		int first_column_dist = 0;
+		int second_column_dist = 0;
+		int third_column_dist = 0;
+		int first_row_dist = 0;
+		int second_row_dist = 0;
+		int third_row_dist = 0;
+
+		//calculate the distance between the center of each spot
+		dist_between_centers = PLAYING_LENGTH/3;
+		//Calculate distance from an outside line to center of box
+		dist_to_center = PLAYING_LENGTH/6;
+
+		//Determine distances to each column/row starting with top left as 0
+		first_column_dist = dist_to_center;
+		second_column_dist = dist_to_center + dist_between_centers;
+		third_column_dist = dist_to_center + 2*(dist_between_centers);
+		first_row_dist = dist_to_center + 2*(dist_between_centers);
+		second_row_dist = dist_to_center + dist_between_centers;
+		third_row_dist = dist_to_center;
+
+		/*
+		Create two parallel arrays, for column dist/row dist
+		ie spot 1 would have second_column_dist and first_row_dist
+		*/
+		int moveValuesColumn[9] = {
+			first_column_dist,
+			second_column_dist,
+			third_column_dist,
+			first_column_dist,
+			second_column_dist,
+			third_column_dist,
+			first_column_dist,
+			second_column_dist,
+			third_column_dist
+			};
+		int moveValuesRow[9] = {
+			first_row_dist,
+			first_row_dist,
+			first_row_dist,
+			second_row_dist,
+			second_row_dist,
+			second_row_dist,
+			third_row_dist,
+			third_row_dist,
+			third_row_dist
+			};
+		//Adjustment distance for the pen
+		const int ADJUSTMENT = 88;
+		writeDebugStreamLine("spot %d has column dist: %d", spot, moveValuesColumn[spot]);
+		writeDebugStreamLine("spot %d has row dist: %d", spot, moveValuesRow[spot]);
+		if(isPen)
+		{
+			//Move to column first
+			move_motor(motorC, moveValuesColumn[spot], -20);
+			//Move to row second
+			move_motor(motorA, moveValuesRow[spot], 20);
+		}
+		else
+		{
+			move_motor(motorC, moveValuesColumn[spot] + ADJUSTMENT, -20);
+			move_motor(motorA, moveValuesRow[spot], 20);
+		}
 }
 
 task main()
 {
-
 	SensorType[S1] = sensorEV3_Color;
   wait1Msec(50);
   SensorMode[S1] = modeEV3Color_Reflected;
   wait1Msec(100);
 
-	int best_move = -1;
-	int best_score = -100000;
-
-	int board[9] = {0,1,0,
+	int board[9] = {1,1,0,
 									0,0,0,
 									2,2,0};
 
-	for(int i = 0; i < 9; i++)
-	{
-		writeDebugStreamLine("MOVE CHECK %d", i);
-		if(board[i] == 0)
-		{
-			writeDebugStreamLine("MOVE EX %d", i);
-			board[i] = 1;
-			int score = minimax(board, 0, false);
-			board[i] = 0;
-			writeDebugStreamLine("MOVE SCORE %d", score);
-			writeDebugStreamLine("BEST SCORE %d", best_score);
-			if(score > best_score)
-			{
-				best_score = score;
-				best_move = i;
-				writeDebugStreamLine("REPLACE %d", best_move);
-			}
-		}
-	}
+	int best_move = best_robot_move(board);
+
 	track_reset();
-	move_spot(best_move);
+	movePenSense(best_move, true);
+	track_reset();
+	movePenSense(best_move, false);
 }
