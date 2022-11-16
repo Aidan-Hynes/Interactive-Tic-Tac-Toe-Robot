@@ -20,7 +20,7 @@ bool check_for_win(int *board, int player)
 	return false;
 }
 
-
+//test456
 
 bool is_terminal(int *board)
 {
