@@ -49,6 +49,8 @@ void move_spot(int index_num)
 }
 
 
+
+//Test 123
 task main()
 {
 	for(int i = 0; i < 9; i++)
