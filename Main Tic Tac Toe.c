@@ -21,6 +21,7 @@ bool check_for_win(int *board, int player)
 }
 
 
+
 bool is_terminal(int *board)
 {
 	int open_count = 0;
@@ -35,29 +36,6 @@ bool is_terminal(int *board)
 
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 int minimax(int *board, int depth, bool maxing)
 {
@@ -108,6 +86,56 @@ int minimax(int *board, int depth, bool maxing)
 	return 0;
 }
 
+void track_reset()
+{
+	bool x_reset = true;
+	bool y_reset = true;
+	nMotorEncoder(motorA) = 0;
+	nMotorEncoder(motorC) = 0;
+	motor[motorA] = -20;
+	motor[motorC] = 15;
+	time1[T1] = 0;
+	wait1Msec(200);
+	while(x_reset || y_reset)
+	{
+		writeDebugStreamLine("%f", abs(nMotorEncoder(motorA)/(time1[T1]/100)));
+		writeDebugStreamLine("%f", abs(nMotorEncoder(motorC)/(time1[T1]/100)));
+
+		if(abs(nMotorEncoder(motorA)/(time1(T1)/100)) < 10)
+		{
+			x_reset = false;
+			motor[motorA] = 0;
+		}
+
+		if(abs(nMotorEncoder(motorC)/(time1(T1)/100)) < 15)
+		{
+			y_reset = false;
+			motor[motorC] = 0;
+		}
+		time1[T1] = 0;
+		nMotorEncoder(motorA) = 0;
+		nMotorEncoder(motorC) = 0;
+		wait1Msec(100);
+	}
+nMotorEncoder(motorA) = 0;
+nMotorEncoder(motorC) = 0;
+}
+
+void move_motor(tMotor motor_port, int distance, int speed)
+{
+	motor[motor_port] = speed;
+	while(abs(nMotorEncoder[motor_port]) < distance)
+	{}
+	motor[motor_port] = 0;
+}
+
+void move_spot(int index_num)
+{
+	const int move_array[9][2] = {{0,480},{195,480},{390,480},{0,240},{195,240},{390,240},{0,0},{195,0},{390,0}};
+	move_motor(motorC, move_array[index_num][0], -20);
+	move_motor(motorA, move_array[index_num][1], 30);
+}
+
 task main()
 {
 
@@ -119,7 +147,9 @@ task main()
 	int best_move = -1;
 	int best_score = -100000;
 
-	int board[9] = {0,0,0,0,0,0,0,0,0};
+	int board[9] = {0,1,0,
+									0,0,0,
+									2,2,0};
 
 	for(int i = 0; i < 9; i++)
 	{
@@ -140,5 +170,6 @@ task main()
 			}
 		}
 	}
-	writeDebugStreamLine("%d", best_move);
+	track_reset();
+	move_spot(best_move);
 }
