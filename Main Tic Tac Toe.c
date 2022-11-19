@@ -114,7 +114,7 @@ void track_reset()
 	bool y_reset = true;
 	nMotorEncoder(motorA) = 0;
 	nMotorEncoder(motorC) = 0;
-	motor[motorA] = -20;
+	motor[motorA] = 20;
 	motor[motorC] = 15;
 	time1[T1] = 0;
 	wait1Msec(200);
@@ -211,12 +211,12 @@ void movePenSense(int spot, bool isPen)
 			//Move to column first
 			move_motor(motorC, moveValuesColumn[spot], -20);
 			//Move to row second
-			move_motor(motorA, moveValuesRow[spot], 20);
+			move_motor(motorA, moveValuesRow[spot], -20);
 		}
 		else
 		{
 			move_motor(motorC, moveValuesColumn[spot] + ADJUSTMENT, -20);
-			move_motor(motorA, moveValuesRow[spot], 20);
+			move_motor(motorA, moveValuesRow[spot], -20);
 		}
 }
 
@@ -234,7 +234,13 @@ task main()
 	int best_move = best_robot_move(board);
 
 	track_reset();
-	movePenSense(best_move, true);
-	track_reset();
-	movePenSense(best_move, false);
+	movePenSense(0, false);
+	wait10Msec(500);
+	for(int i = 0; i < 9; i++)
+	{
+		track_reset();
+		movePenSense(i, false);
+		if(SensorValue[S4] < 65)
+			writeDebugStreamLine("Move found at %d", i);
+	}
 }

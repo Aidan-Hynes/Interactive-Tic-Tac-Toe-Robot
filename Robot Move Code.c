@@ -4,7 +4,7 @@ void track_reset()
 	bool y_reset = true;
 	nMotorEncoder(motorA) = 0;
 	nMotorEncoder(motorC) = 0;
-	motor[motorA] = -20;
+	motor[motorA] = 20;
 	motor[motorC] = 15;
 	time1[T1] = 0;
 	wait1Msec(200);
@@ -41,16 +41,7 @@ void move_motor(tMotor motor_port, int distance, int speed)
 	motor[motor_port] = 0;
 }
 
-void move_spot(int index_num)
-{
-	const int move_array[9][2] = {{0,480},{195,480},{390,480},{0,240},{195,240},{390,240},{0,0},{195,0},{390,0}};
-	move_motor(motorC, move_array[index_num][0], -20);
-	move_motor(motorA, move_array[index_num][1], 30);
-}
 
-
-
-//Test 123
 task main()
 {
 	for(int i = 0; i < 9; i++)
