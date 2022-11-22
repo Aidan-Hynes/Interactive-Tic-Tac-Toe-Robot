@@ -1,0 +1,43 @@
+void drawBoard()
+/*
+This function draws the playing board for a tic-tac-toe game.
+A constant playing length in motor encoder clicks is assumed
+to be 390.
+*/
+{
+    const int PLAYING_LENGTH= 390;
+    int dist_between_lines = 0;
+    dist_between_lines = PLAYING_LENGTH/3;
+
+    // move to first column line and then draw upwards
+    move_motor(motorC, dist_between_lines, -20);
+    /*
+    Put pen down
+    */
+    movemotor(motorA, PLAYING_LENGTH, 20);
+    track_rest();
+
+    //Move to second column and then draw upwards
+    move_motor(motorC, 2*dist_between_lines, -20);
+    /*
+    Put pen down
+    */
+    move_motor(motorA, PLAYING_LENGTH, 20);
+    track_reset();
+
+    //Move to first row, draw across column
+    move_motor(motorA, dist_between_lines, 20);
+    /*
+    put pen down
+    */
+    move_motor(motorC, PLAYING_LENGTH, -20);
+    track_reset();
+
+    //Move to second row, draw across column
+    move_motor(motorA, 2*dist_between_lines, 20);
+    /*
+    Put pen down
+    */
+    move_motor(motorC, PLAYING_LENGTH, -20);
+    track_reset();
+}
