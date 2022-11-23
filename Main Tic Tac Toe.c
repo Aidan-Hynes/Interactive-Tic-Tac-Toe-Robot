@@ -299,7 +299,7 @@ task main()
 									0,0,0};
 
 
-	//draw_board();
+	draw_board();
 
 	while(!is_terminal(board))
 	{
