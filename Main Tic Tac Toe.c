@@ -27,9 +27,11 @@ bool is_terminal(int *board)
 	for(int i = 0; i < 9; i++)
 	{
 		if(board[i] == 0)
+		{
 			open_count++;
+		}
 	}
-
+	//writeDebugStreamLine("%d", open_count);
 	if(check_for_win(board, 1) || check_for_win(board, 2) || open_count == 0)
 		return true;
 
@@ -95,6 +97,7 @@ int best_robot_move(int *board)
 		{
 			board[i] = 1;
 			int score = minimax(board, 0, false);
+			writeDebugStreamLine("out");
 			board[i] = 0;
 			if(score > best_score)
 			{
@@ -139,6 +142,18 @@ void track_reset()
 	}
 nMotorEncoder(motorA) = 0;
 nMotorEncoder(motorC) = 0;
+}
+
+void pen_reset()
+{
+	nMotorEncoder(motorB) = 0;
+	motor[motorB] = -30;
+	time1[T2] = 0;
+	wait1Msec(200);
+	while(abs(nMotorEncoder(motorB)/(time1(T2)/100)) > 7)
+	{}
+	motor[motorB] = 0;
+	nMotorEncoder(motorB) = 0;
 }
 
 void move_motor(tMotor motor_port, int distance, int speed)
@@ -203,8 +218,8 @@ void movePenSense(int spot, bool isPen)
 			third_row_dist
 			};
 		//Adjustment distance for the pen
-		const int HORZ_ADJUSTMENT = 155;
-		const int VERT_ADJUSTMENT = -35;
+		const int HORZ_ADJUSTMENT = 170;
+		const int VERT_ADJUSTMENT = 0;
 
 		if(isPen)
 		{
@@ -219,22 +234,11 @@ void movePenSense(int spot, bool isPen)
 			move_motor(motorA, moveValuesRow[spot] + VERT_ADJUSTMENT, -20);
 		}
 }
+
 void pen_down()
 {
-	motor[motorB] = 5;
-	nMotorEncoder[motorB] = 0;
-	while(abs(nMotorEncoder[motorB]) < 25)
-	{}
-	motor[motorB] = 0;
-}
-
-void pen_up()
-{
-	motor[motorB] = -5;
-	nMotorEncoder[motorB] = 0;
-	while(abs(nMotorEncoder[motorB]) < 25)
-	{}
-	motor[motorB] = 0;
+	const int PEN_DIST = 30;
+ 	move_motor(motorB, PEN_DIST, 40);
 }
 
 /*
@@ -244,7 +248,7 @@ to be 390.
 */
 void draw_board()
 {
-		pen_up();
+		pen_reset();
 		track_reset();
     const int PLAYING_LENGTH = 300;
     int dist_between_lines = 0;
@@ -253,33 +257,33 @@ void draw_board()
     // move to first column line and then draw upwards
     move_motor(motorC, dist_between_lines, -20);
     pen_down();
-    wait1Msec(500);
+    wait1Msec(750);
     move_motor(motorA, PLAYING_LENGTH, -20);
-    pen_up();
+    pen_reset();
     track_reset();
 
     //Move to second column and then draw upwards
     move_motor(motorC, 2*dist_between_lines, -20);
     pen_down();
-    wait1Msec(500);
+    wait1Msec(750);
     move_motor(motorA, PLAYING_LENGTH, -20);
-    pen_up();
+    pen_reset();
     track_reset();
 
     //Move to first row, draw across column
     move_motor(motorA, dist_between_lines, -20);
     pen_down();
-    wait1Msec(500);
+    wait1Msec(750);
     move_motor(motorC, PLAYING_LENGTH, -20);
-    pen_up();
+    pen_reset();
     track_reset();
 
     //Move to second row, draw across column
     move_motor(motorA, 2*dist_between_lines, -20);
     pen_down();
-    wait1Msec(500);
+    wait1Msec(750);
     move_motor(motorC, PLAYING_LENGTH, -20);
-    pen_up();
+    pen_reset();
     track_reset();
 }
 
@@ -290,15 +294,17 @@ task main()
   SensorMode[S1] = modeEV3Color_Reflected;
   wait1Msec(100);
 
-	int board[9] = {0,0,0,0,0,0,0,0,0};
+	int board[9] = {0,0,0,
+									0,0,0,
+									0,0,0};
 
 
-	writeDebugStreamLine("%d", best_move);
-
-	draw_board();
+	//draw_board();
 
 	while(!is_terminal(board))
 	{
+		pen_reset();
+		track_reset();
 		flushButtonMessages();
 		waitForButtonPress();
 		for(int i = 0; i < 9; i++)
@@ -316,9 +322,12 @@ task main()
 			}
 		}
 		track_reset();
-		movePenSense(best_robot_move(board), true);
+		int best_move = best_robot_move(board);
+		writeDebugStreamLine("%d", best_move);
+		movePenSense(best_move, true);
+		board[best_move] = 1;
 		pen_down();
-		pen_up();
-		track_reset();
+		pen_reset();
+		wait1Msec(1000);
 	}
 }
