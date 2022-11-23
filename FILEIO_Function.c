@@ -17,11 +17,11 @@ void displayScores();
 
 task main()
 {
-	//reateEmpty(); //Creates the empty base file
+	//createEmpty(); //Creates the empty base file
 	createTestFile(); // test file
 	displayScores(); // Displays scores onto ev3
 
-	wait1Msec(5000);
+	wait1Msec(7000);
 }
 
 // reads TTT_High_Scores.txt and displays the lines for easy, medium, hard, and current (0, 1, 2, 3)
@@ -42,10 +42,10 @@ void displayScores()
 	readIntPC(input, hardHS);
 	readIntPC(input, currentHS);
 	// displaying input
-	displayString(0, "EASY: %d", easyHS);
-	displayString(1, "MEDIUM: %d", mediumHS);
-	displayString(2, "HARD: %d", hardHS);
-	displayString(3, "CURRENT: %d", currentHS);
+	displayString(0, "Easy High Score: %d", easyHS);
+	displayString(1, "Medium High Score: %d", mediumHS);
+	displayString(2, "Hard High Score: %d", hardHS);
+	displayString(3, "Current Score: %d", currentHS);
 }
 
 // writes things to the highscore
@@ -53,16 +53,11 @@ void displayScores()
 // should not be an issue for only 4 values though
 void createTestFile()
 {
-	writeToHighscore(true, 3);
-	writeToHighscore(false, 3);
-	writeToHighscore(true, 1);
-	writeToHighscore(true, 1);
-	writeToHighscore(true, 1);
-	writeToHighscore(false, 1);
-	writeToHighscore(true, 1);
-	writeToHighscore(false, 1);
 	writeToHighscore(true, 2);
-	writeToHighscore(false, 2);
+	writeToHighscore(true, 2);
+	writeToHighscore(true, 2);
+	writeToHighscore(true, 2);
+	writeToHighscore(true, 2);
 }
 
 // writes to TTT_High_Scores.txt after calculating the new scores
@@ -113,10 +108,7 @@ void writeToHighscore(bool gameResult, int difficulty)
 	// writeOutput returns a true if it writes correctly
 	if (writeOutput(easyHS, mediumHS, hardHS, currentHS))
 	{
-		// should hear a beep beep for everytime writeToHighscore is called
-
 	} else {
-
 	}
 	wait1Msec(200);
 }
