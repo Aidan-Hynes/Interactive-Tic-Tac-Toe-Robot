@@ -1,4 +1,5 @@
 //ALGORITHM FUNCTIONS
+
 bool check_for_win(int *board, int player)
 {
 	for(int i = 0; i <= 2; i++)
@@ -21,24 +22,24 @@ bool check_for_win(int *board, int player)
 	return false;
 }
 
+
 bool is_terminal(int *board)
 {
 	int open_count = 0;
+
 	for(int i = 0; i < 9; i++)
 	{
 		if(board[i] == 0)
-		{
 			open_count++;
-		}
 	}
-	//writeDebugStreamLine("%d", open_count);
+
 	if(check_for_win(board, 1) || check_for_win(board, 2) || open_count == 0)
 		return true;
 
 	return false;
 }
 
-int minimax(int *board, int depth, bool maxing)
+int minimax(int *board, int depth, long alpha, long beta, bool maxing)
 {
 	int best_score = 0;
 
@@ -60,11 +61,15 @@ int minimax(int *board, int depth, bool maxing)
 			if(board[i] == 0)
 			{
 				board[i] = 1;
-				int score = minimax(board, depth+1, false);
+				int score = minimax(board, depth+1, alpha, beta, false);
 				board[i] = 0;
 				if(score > best_score)
 					best_score = score;
 			}
+			if(best_score >= beta)
+				break;
+			if(best_score > alpha)
+				alpha = best_score;
 		}
 		return best_score;
 	}
@@ -76,15 +81,20 @@ int minimax(int *board, int depth, bool maxing)
 			if(board[i] == 0)
 			{
 				board[i] = 2;
-				int score = minimax(board, depth+1, true);
+				int score = minimax(board, depth+1, alpha, beta, true);
 				board[i] = 0;
 				if(score < best_score)
 					best_score = score;
 			}
+			if(best_score <= alpha)
+				break;
+			if(best_score < beta)
+				beta = best_score;
 		}
 		return best_score;
 	}
-	return -1;
+
+	return 0;
 }
 
 int best_robot_move(int *board)
@@ -96,8 +106,7 @@ int best_robot_move(int *board)
 		if(board[i] == 0)
 		{
 			board[i] = 1;
-			int score = minimax(board, 0, false);
-			writeDebugStreamLine("out");
+			int score = minimax(board, 0, -1000000000, 1000000000, false);
 			board[i] = 0;
 			if(score > best_score)
 			{
@@ -106,8 +115,42 @@ int best_robot_move(int *board)
 			}
 		}
 	}
-	writeDebugStreamLine("Selected Move: %d", best_move);
 	return best_move;
+}
+
+int robot_move(int *board, int diff)
+{
+	int move_selection = -1;
+	int open_spots[9];
+	int open_counter = 0;
+	for(int i = 0; i < 9; i++)
+	{
+		if(board[i] == 0)
+		{
+			open_spots[open_counter] = i;
+			open_counter++;
+		}
+	}
+	if(diff == 3)
+	{
+		move_selection = best_robot_move(board);
+	}
+	else if(diff == 2)
+	{
+		if(random(1))
+			move_selection = best_robot_move(board);
+		else
+		{
+			move_selection = open_spots[random(open_counter-1)];
+
+		}
+	}
+	else if(diff == 1)
+	{
+		move_selection = open_spots[random(open_counter-1)];
+	}
+
+	return move_selection;
 }
 
 //ROBOT MOVE FUNCTIONS
@@ -293,6 +336,8 @@ task main()
   wait1Msec(50);
   SensorMode[S1] = modeEV3Color_Reflected;
   wait1Msec(100);
+  SensorType[S4] = sensorEV3_Touch;
+  wait1Msec(100);
 
 	int board[9] = {0,0,0,
 									0,0,0,
@@ -303,31 +348,43 @@ task main()
 
 	while(!is_terminal(board))
 	{
-		pen_reset();
-		track_reset();
-		flushButtonMessages();
-		waitForButtonPress();
-		for(int i = 0; i < 9; i++)
+		int board_same = true;
+		do
 		{
 			track_reset();
-			if(board[i] == 0)
+			displayTextLine(8, "Please Make Your Move and Press the Button");
+			while(SensorValue[S4] == 0)
+			{}
+			while(SensorValue[S4] == 1)
+			{}
+			eraseDisplay();
+			for(int i = 0; i < 9; i++)
 			{
-				movePenSense(i, false);
-				wait1Msec(500);
-				if(SensorValue[S1] < 25)
+				track_reset();
+				if(board[i] == 0)
 				{
-					writeDebugStreamLine("Move Found At: %d", i);
-					board[i] = 2;
+					movePenSense(i, false);
+					wait1Msec(500);
+					if(SensorValue[S1] < 25)
+					{
+						writeDebugStreamLine("Move Found At: %d", i);
+						board[i] = 2;
+						board_same = false;
+					}
 				}
 			}
 		}
+		while(board_same);
 		track_reset();
-		int best_move = best_robot_move(board);
-		writeDebugStreamLine("%d", best_move);
-		movePenSense(best_move, true);
-		board[best_move] = 1;
-		pen_down();
-		pen_reset();
-		wait1Msec(1000);
+		if(!is_terminal(board))
+		{
+			int best_move = robot_move(board, 1);
+			writeDebugStreamLine("%d", best_move);
+			movePenSense(best_move, true);
+			board[best_move] = 1;
+			pen_down();
+			wait1Msec(1000);
+			pen_reset();
+		}
 	}
 }
