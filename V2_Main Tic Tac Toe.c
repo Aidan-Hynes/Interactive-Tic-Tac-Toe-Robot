@@ -171,13 +171,14 @@ int TTT_GUI ()
 			displayScores();
 			wait1Msec(6000);
 			eraseDisplay();
-		}else if (getButtonPress(buttonUp))
+		}
+		else if (getButtonPress(buttonUp))
 		{
 			eraseDisplay();
-
 			return -1;
 		}
-	}while(loop_value == 1);
+	}
+	while(loop_value > 0);
 	return -1;
 }
 
@@ -520,34 +521,28 @@ task main()
 	SensorType[S4] = sensorEV3_Touch;
 	wait1Msec(100);
 
-	int difficulty = 0;
-	bool loop_value = true;
+ 	bool loop_run = true;
 
-	while(loop_value)
+	while(loop_run)
 	{
 		int board[9] = {0,0,0,
 			0,0,0,
 			0,0,0};
 		int difficulty = TTT_GUI();
-		if(difficulty != -1)
-		{
-			writeDebugStreamLine("%d", difficulty);
+
+		if(difficulty == -1)
+			loop_run = false;
+		else
 			draw_board();
-		} else if (difficulty == -1)
-		{
-			loop_value = false;
-		}
 
-		writeDebugStreamLine(check_for_win(board, 1)? "True":"False");
-		writeDebugStreamLine(check_for_win(board, 2)? "True":"False");
-
-		while(!is_terminal(board) && loop_value)
+		while(!is_terminal(board) && loop_run)
 		{
-			int board_same = true;
+			int change_count = 0;
 			do
-			{
+				{
 				track_reset();
-				displayTextLine(8, "Please Make Your Move and Press the Button");
+				displayTextLine(8, "Please Make Your Move");
+				displayTextLine(9, "Then Press the Button");
 				while(SensorValue[S4] == 0)
 				{}
 				while(SensorValue[S4] == 1)
@@ -564,13 +559,24 @@ task main()
 						{
 							writeDebugStreamLine("Move Found At: %d", i);
 							board[i] = 2;
-							board_same = false;
+							change_count++;
 						}
 					}
 				}
-			}while(board_same);
+			}
+			while(change_count < 1 && loop_run);
+
+			if(change_count > 1)
+			{
+				displayTextLine(8, "Too Many Moves!");
+				displayTextLine(9, "The game will now restart");
+				wait1Msec(5000);
+				break;
+			}
+
 			track_reset();
-			if(!is_terminal(board))
+
+			if(!is_terminal(board) && loop_run)
 			{
 				int best_move = robot_move(board, difficulty);
 				writeDebugStreamLine("%d", best_move);
@@ -579,9 +585,9 @@ task main()
 				pen_down();
 				wait1Msec(1000);
 				pen_reset();
+
 			}
 		}
 		writeToHighscore(check_for_win(board,2), difficulty);
-
 	}
 }
