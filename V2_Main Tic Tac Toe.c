@@ -171,6 +171,11 @@ int TTT_GUI ()
 			displayScores();
 			wait1Msec(6000);
 			eraseDisplay();
+		}else if (getButtonPress(buttonUp))
+		{
+			eraseDisplay();
+
+			return -1;
 		}
 	}while(loop_value == 1);
 	return -1;
@@ -515,25 +520,28 @@ task main()
 	SensorType[S4] = sensorEV3_Touch;
 	wait1Msec(100);
 
+	int difficulty = 0;
+	bool loop_value = true;
 
-
-
-
-	while (!getButtonPress(buttonUp))
+	while(loop_value)
 	{
 		int board[9] = {0,0,0,
 			0,0,0,
 			0,0,0};
 		int difficulty = TTT_GUI();
-
-
-
-		draw_board();
+		if(difficulty != -1)
+		{
+			writeDebugStreamLine("%d", difficulty);
+			draw_board();
+		} else if (difficulty == -1)
+		{
+			loop_value = false;
+		}
 
 		writeDebugStreamLine(check_for_win(board, 1)? "True":"False");
 		writeDebugStreamLine(check_for_win(board, 2)? "True":"False");
 
-		while(!is_terminal(board))
+		while(!is_terminal(board) && loop_value)
 		{
 			int board_same = true;
 			do
@@ -560,8 +568,7 @@ task main()
 						}
 					}
 				}
-			}
-			while(board_same);
+			}while(board_same);
 			track_reset();
 			if(!is_terminal(board))
 			{
