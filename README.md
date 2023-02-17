@@ -5,7 +5,8 @@
 - The final version of the code is "Tic Tac Toe FINAL"
 
 Joint final project for MTE 100 & MTE 121
-University of Waterloo - Department of Mechanical and Mechatronics Engineering
+
+University of Waterloo: Department of Mechanical and Mechatronics Engineering
 
 Contributors:
 Aidan Hynes | William McIntyre | Winters Xia | Jeffrey Luo
