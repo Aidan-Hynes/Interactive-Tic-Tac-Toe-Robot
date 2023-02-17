@@ -8,7 +8,4 @@ Joint final project for MTE 100 & MTE 121
 University of Waterloo - Department of Mechanical and Mechatronics Engineering
 
 Contributors:
-Aidan Hynes
-William McIntyre
-Winters Xia
-Jeffrey Luo
+Aidan Hynes | William McIntyre | Winters Xia | Jeffrey Luo
